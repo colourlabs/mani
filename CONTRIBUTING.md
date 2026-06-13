@@ -54,9 +54,9 @@ src/mani/
     ├── http.lua              # HTTP GET (ssl.https -> socket.http -> curl)
     ├── sha256.lua            # Pure-Lua SHA-256
     └── spdx.lua              # SPDX license identifier lookup
-spec/                         # Mirrors src/ structure, _spec suffix
-bin/mani                      # Shell entry point
-rockspecs/                    # Release and dev rockspecs
+spec/                        # Mirrors src/ structure, _spec suffix
+bin/mani                     # Shell entry point
+rockspecs/                   # Release and dev rockspecs
 ```
 
 ## testing conventions
