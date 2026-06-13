@@ -36,8 +36,11 @@ jobs:
       - name: Upload to LuaRocks
         env:
           LUAROCKS_API_KEY: ${{ secrets.LUAROCKS_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           version=${GITHUB_REF_NAME#v}
+          sed -i "s|git+https://github.com/|git+https://x-access-token:${GITHUB_TOKEN}@github.com/|" \
+            rockspecs/mani-${version}-1.rockspec
           luarocks upload rockspecs/mani-${version}-1.rockspec --api-key=$LUAROCKS_API_KEY
 
       - name: Create GitHub Release
