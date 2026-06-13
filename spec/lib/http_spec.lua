@@ -79,8 +79,8 @@ describe("HTTP library (mani.lib.http)", function()
 
   it("falls back to curl when no native modules available", function()
     io.popen = function(cmd)
-      assert.are.equal("curl -sL https://example.com 2>/dev/null", cmd)
-      return { read = function() return "curl body" end, close = function() end }
+      assert.are.equal("curl -sL --connect-timeout 10 -w '\\n%{http_code}' https://example.com 2>/dev/null", cmd)
+      return { read = function() return "curl body\n200" end, close = function() end }
     end
 
     local body = http_lib.get("https://example.com")
@@ -123,7 +123,7 @@ describe("HTTP library (mani.lib.http)", function()
     end)
 
     it("returns nil for a URL that returns 404", function()
-      local body = http_lib.get("https://httpbin.org/status/404")
+      local body = http_lib.get("https://example.com/nonexistent")
       assert.is_nil(body)
     end)
 

@@ -16,11 +16,14 @@ function M.get(url)
     return nil
   end
 
-  local handle = io.popen("curl -sL " .. url .. " 2>/dev/null")
+  local handle = io.popen("curl -sL --connect-timeout 10 -w '\\n%{http_code}' " .. url .. " 2>/dev/null")
   if not handle then return nil end
-  local body = handle:read("*a")
+  local output = handle:read("*a")
   handle:close()
-  if body and body ~= "" then return body end
+  local body, code = output:match("^(.*)\n(%d+)$")
+  if code and tonumber(code) == 200 then
+    return body
+  end
   return nil
 end
 
