@@ -16,7 +16,7 @@ Makefiles for Lua projects are painful - they take time to write, break across p
 
 ## requirements
 
-- Lua 5.1 or 5.4
+- Lua 5.3 to 5.4
 - LuaRocks
 
 ## installation

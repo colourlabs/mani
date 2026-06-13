@@ -42,7 +42,13 @@ function M.silent(cmd)
   end
   local output = handle:read("*a")
   local ok = handle:close()
-  if not ok then
+  local failed
+  if type(ok) == "number" then
+    failed = ok ~= 0
+  else
+    failed = not ok
+  end
+  if failed then
     return "", output
   end
   return output, ""

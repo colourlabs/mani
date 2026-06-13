@@ -13,7 +13,7 @@ description = {
 }
 
 dependencies = {
-  "lua >= 5.1",
+  "lua >= 5.3",
   "argparse >= 0.7.0",
 }
 

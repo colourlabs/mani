@@ -26,6 +26,7 @@ for _, entry in ipairs(command_index) do
 end
 
 local parser = argparse("mani", "A build tool and LuaRocks wrapper for Lua projects.")
+parser:require_command(false)
 parser:command_target("command")
 parser:flag("-v --version", "Show version and exit.")
 
@@ -36,7 +37,8 @@ end
 local parsed = parser:parse(arg)
 
 if parsed.version then
-  print(require("mani.version"))
+  local version = require("mani.version")
+  print(version)
   os.exit(0)
 end
 
