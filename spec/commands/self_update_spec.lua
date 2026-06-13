@@ -76,7 +76,7 @@ describe("self-update command (mani.commands.self_updater.self_update)", functio
 
   it("reports up-to-date when current matches latest", function()
     io.popen = function()
-      return make_handle('{"tag_name": "v0.1.0"}')
+      return make_handle('{"tag_name": "v0.1.0"}\n200')
     end
 
     cmd.run({ version = nil }, {}, nil)
@@ -94,7 +94,7 @@ describe("self-update command (mani.commands.self_updater.self_update)", functio
 
   it("errors and exits on unparseable GitHub response", function()
     io.popen = function()
-      return make_handle("not valid json")
+      return make_handle("not valid json\n200")
     end
 
     cmd.run({ version = nil }, {}, nil)
@@ -104,7 +104,7 @@ describe("self-update command (mani.commands.self_updater.self_update)", functio
 
   it("installs newer version via luarocks", function()
     io.popen = function()
-      return make_handle('{"tag_name": "v0.2.0"}')
+      return make_handle('{"tag_name": "v0.2.0"}\n200')
     end
     os.execute = spy.new(function() return true end)
 
@@ -124,7 +124,7 @@ describe("self-update command (mani.commands.self_updater.self_update)", functio
 
   it("handles tags without v prefix", function()
     io.popen = function()
-      return make_handle('{"tag_name": "0.2.0"}')
+      return make_handle('{"tag_name": "0.2.0"}\n200')
     end
     os.execute = spy.new(function() return true end)
 
