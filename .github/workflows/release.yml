@@ -23,15 +23,15 @@ jobs:
 
       - name: Install dependencies
         run: |
-          luarocks install --tree=.mani/tree --only-deps rockspecs/mani-dev-1.rockspec
-          luarocks install --tree=.mani/tree busted
-          luarocks install --tree=.mani/tree luacheck
+          luarocks install --only-deps rockspecs/mani-dev-1.rockspec
+          luarocks install busted
+          luarocks install luacheck
 
       - name: Lint
-        run: .mani/tree/bin/luacheck src/ spec/
+        run: luacheck src/ spec/
 
       - name: Run all tests
-        run: .mani/tree/bin/busted spec/
+        run: busted spec/
 
       - name: Upload to LuaRocks
         env:
