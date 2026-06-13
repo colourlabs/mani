@@ -22,7 +22,7 @@ Makefiles for Lua projects are painful - they take time to write, break across p
 
 ## how it works
 
-mani creates a `.mani/tree` directory in your project root. this is a self-contained LuaRocks tree — all dependencies are installed here, completely isolated from your system's global LuaRocks packages. this means:
+mani creates a `.mani/tree` directory in your project root. this is a self-contained LuaRocks tree, all dependencies are installed here, completely isolated from your system's global LuaRocks packages. this means:
 
 - no conflicts between projects
 - no `sudo luarocks install`
