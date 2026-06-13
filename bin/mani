@@ -1,0 +1,10 @@
+#!/usr/bin/env lua
+
+local status = pcall(require, "mani.main")
+
+if not status then
+  local chunk = 'src/?.lua;src/?/init.lua;'
+  package.path = chunk .. package.path
+
+  require("mani.main")
+end

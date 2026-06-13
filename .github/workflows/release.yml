@@ -1,0 +1,50 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Lua
+        uses: leafo/gh-actions-lua@v10
+        with:
+          lua-version: "5.4"
+
+      - name: Setup LuaRocks
+        uses: leafo/gh-actions-luarocks@v4
+
+      - name: Install dependencies
+        run: |
+          luarocks install --tree=.mani/tree --only-deps rockspecs/mani-dev-1.rockspec
+          luarocks install --tree=.mani/tree busted
+          luarocks install --tree=.mani/tree luacheck
+
+      - name: Lint
+        run: .mani/tree/bin/luacheck src/ spec/
+
+      - name: Run all tests
+        run: .mani/tree/bin/busted spec/
+
+      - name: Upload to LuaRocks
+        env:
+          LUAROCKS_API_KEY: ${{ secrets.LUAROCKS_API_KEY }}
+        run: |
+          version=${GITHUB_REF_NAME#v}
+          luarocks upload rockspecs/mani-${version}-1.rockspec --api-key=$LUAROCKS_API_KEY
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "v${GITHUB_REF_NAME#v}" \
+            --generate-notes

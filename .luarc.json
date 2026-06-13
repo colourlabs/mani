@@ -1,0 +1,43 @@
+{
+  "format": {
+    "enable": true,
+    "defaultConfig": {
+      "indent_style": "space",
+      "indent_size": "2",
+      "tab_width": "2",
+      "align_continuous_assign_names": "false",
+      "align_continuous_lines": "false",
+      "align_call_args": "false"
+    }
+  },
+  "runtime": {
+    "version": "Lua 5.4"
+  },
+  "diagnostics": {
+    "globals": [
+      "describe",
+      "it",
+      "before_each",
+      "after_each",
+      "before",
+      "after",
+      "setup",
+      "teardown",
+      "pending",
+      "assert",
+      "spy",
+      "stub",
+      "mock",
+      "finally"
+    ],
+    "groupSeverity": {
+      "ambiguity": "Warning",
+      "await": "Warning",
+      "duplicate": "Warning"
+    },
+    "severity": {
+      "missing-return": "Warning",
+      "unused-local": "Hint"
+    }
+  }
+}

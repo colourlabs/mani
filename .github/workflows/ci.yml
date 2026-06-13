@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        lua-version: ["5.1", "5.4", "5.5"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Lua
+        uses: leafo/gh-actions-lua@v10
+        with:
+          luaVersion: ${{ matrix.lua-version }}
+
+      - name: Setup LuaRocks
+        uses: leafo/gh-actions-luarocks@v4
+
+      - name: Install dependencies
+        run: |
+          luarocks install --tree=.mani/tree --only-deps rockspecs/mani-dev-1.rockspec
+          luarocks install --tree=.mani/tree busted
+          luarocks install --tree=.mani/tree luacheck
+
+      - name: Lint
+        run: .mani/tree/bin/luacheck src/ spec/
+
+      - name: Test
+        run: .mani/tree/bin/busted --exclude-tags=interactive,network spec/
