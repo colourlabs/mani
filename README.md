@@ -9,15 +9,26 @@ Makefiles for Lua projects are painful - they take time to write, break across p
 ## features
 
 - single command dependency installation with lockfile support
-- per-project package tree - no global pollution
+- per-project package tree (`.mani/tree`) - no global pollution
 - task runner with dependency ordering and profiles
 - lockfile integrity verification
 - generates `.rockspec` from project metadata automatically
+- `self-update` command to upgrade mani itself
 
 ## requirements
 
-- Lua 5.3 to 5.4
+- Lua 5.3 to 5.5
 - LuaRocks
+
+## how it works
+
+mani creates a `.mani/tree` directory in your project root. this is a self-contained LuaRocks tree — all dependencies are installed here, completely isolated from your system's global LuaRocks packages. this means:
+
+- no conflicts between projects
+- no `sudo luarocks install`
+- reproducible environments per project
+
+the lockfile (`mani.lock.lua`) pins exact versions so that every install is identical across machines.
 
 ## installation
 
@@ -30,6 +41,7 @@ luarocks install mani
 clone the repo and build from source:
 
 ```bash
+# install GNU make on the host
 git clone https://github.com/colourlabs/mani
 cd mani
 make dev
@@ -49,6 +61,12 @@ create a new project:
 
 ```bash
 mani init
+```
+
+pass `-y` to skip prompts and use defaults:
+
+```bash
+mani init -y
 ```
 
 this creates a `mani.build.lua` in the current directory:
@@ -123,6 +141,12 @@ mani run build
 | `mani lock --check` | verify lockfile integrity against installed packages  |
 | `mani lock --regen` | regenerate lockfile from currently installed packages |
 
+**maintenance**
+
+| command            | description                              |
+| ------------------ | ---------------------------------------- |
+| `mani self-update` | update mani itself to the latest version |
+
 ## adding packages
 
 ```bash
@@ -131,14 +155,29 @@ mani add inspect@3.0
 mani add -D busted
 ```
 
+## project metadata
+
+`mani.project{}` accepts the following fields:
+
+| field         | required | default           | description                                                 |
+| ------------- | -------- | ----------------- | ----------------------------------------------------------- |
+| `name`        | yes      | —                 | project name                                                |
+| `version`     | no       | `"0.1.0"`         | project version                                             |
+| `license`     | no       | `"MIT"`           | SPDX license identifier (see at https://spdx.org/licenses/) |
+| `homepage`    | no       | —                 | project homepage URL                                        |
+| `summary`     | no       | `"A Lua project"` | short description                                           |
+| `description` | no       | —                 | longer description                                          |
+| `profiles`    | no       | `{}`              | environment-specific configs (see profiles)                 |
+
+these fields are used when generating a `.rockspec` via `mani rockspec`.
+
 ## tasks
 
 tasks are defined in `mani.build.lua` and can depend on other tasks:
 
 ```lua
 mani.task("build", function(params)
-  local cfg = params.profile_config
-  mani:exec("some-bundler --output " .. cfg.output)
+  mani:exec("luacheck src/")
 end)
 
 mani.task("test", { "build" }, function()
@@ -148,15 +187,38 @@ end)
 mani.task("default", { "build" }, function() end)
 ```
 
-run with a profile:
+the first task argument is a `params` table that includes `params.profile` (the current profile name) and `params.profile_config` (that profile's config table). see [profiles](#profiles) below.
+
+run a task:
 
 ```bash
-mani run build --profile prod
+mani run build
+```
+
+run the default task (no name needed):
+
+```bash
+mani run
+```
+
+## exec
+
+`mani exec` runs any shell command with `.mani/tree/bin` added to `PATH`, so installed tools are available without global install:
+
+```bash
+mani exec luacheck src/
+mani exec busted spec/
+```
+
+this is equivalent to running:
+
+```bash
+PATH="$PWD/.mani/tree/bin:$PATH" luacheck src/
 ```
 
 ## profiles
 
-profiles let you configure tasks differently per environment:
+profiles let you pass different configuration to tasks depending on the environment. they are declared in `mani.project{}` as a table of named configs:
 
 ```lua
 mani.project {
@@ -164,21 +226,51 @@ mani.project {
   version = "0.1.0",
 
   profiles = {
-    dev  = { output = "dist/my-project-dev.lua" },
-    prod = { output = "dist/my-project.lua" },
+    dev  = { output = "dist/my-project-dev.lua", debug = true },
+    prod = { output = "dist/my-project.lua",     debug = false },
   },
 }
 ```
 
-## lockfile
+each key is a profile name mapped to an arbitrary config table. the config is accessible in any task via `params.profile_config`:
 
-mani generates a `mani.lock.lua` after every install. commit this file to ensure reproducible installs across machines.
+```lua
+mani.task("build", function(params)
+  local cfg = params.profile_config
+  -- cfg is { output = "dist/my-project-dev.lua", debug = true } when using dev
+  mani:exec("bundler --output " .. cfg.output)
+end)
+```
 
-to install exactly what the lockfile specifies:
+select a profile at run time:
 
 ```bash
-mani install --frozen-lockfile
+mani run build --profile prod
 ```
+
+the default profile is `dev`. when no profiles are defined (`profiles = {}` or omitted), any profile name is accepted and `profile_config` will be an empty table.
+
+## lockfile
+
+every `mani install` writes a `mani.lock.lua` that pins exact versions of every dependency. commit this file to ensure reproducible installs across machines.
+
+**workflow:**
+
+```bash
+# first install creates the lockfile
+mani install
+
+# later, install exactly what the lockfile says
+mani install --frozen-lockfile
+
+# verify the lockfile matches what's installed
+mani lock --check
+
+# regenerate the lockfile from current install state
+mani lock --regen
+```
+
+`--frozen-lockfile` fails if the lockfile doesn't match the declared dependencies in `mani.build.lua` (e.g., after adding a package but before installing it), preventing accidental drift.
 
 ## license
 
